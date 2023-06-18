@@ -87,7 +87,7 @@ void generator_image::generate_ppm_image(libconfig::Config *cfg)
         for (int x = 0; x < width; x++) {
             if (point_belond_to_sphere(xSphere, ySphere, zSphere, x, y, std::max(zSphere, zLight), rayonSphere)) {
                 if (light_have_direct_ray_to_sphere(xSphere, ySphere, zSphere, x, y, std::max(zSphere, zLight), rayonSphere, xLight, yLight, zLight)) {
-                    if (compteur == 100) {
+                    if (compteur == 250) {
                         red += 1;
                         strRed = std::to_string(red);
                         image << strRed + " 0 0 ";  
