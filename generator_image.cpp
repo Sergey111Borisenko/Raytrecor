@@ -11,14 +11,46 @@ generator_image::generator_image()
 
 }
 
-bool generator_image::point_belond_to_sphere(int xSphere, int ySphere, int zSphere, int x, int y, int rayonSphere)
+bool generator_image::point_belond_to_sphere(int xSphere, int ySphere, int zSphere, int x, int y, int z, int rayonSphere)
 {
-    for (int z = 0; z < zSphere; z++) {
-        if (pow(rayonSphere, 2) - 50 < pow((xSphere - x), 2) + pow((ySphere - y), 2) + pow((zSphere - z), 2) && pow((xSphere - x), 2) + pow((ySphere - y), 2) + pow((zSphere - z), 2) < pow(rayonSphere, 2) + 50)
+    for (int z2 = 0; z2 < z + rayonSphere; z2++) {
+        if (pow(rayonSphere, 2) - (z + rayonSphere * 2) < pow((xSphere - x), 2) + pow((ySphere - y), 2) + pow((zSphere - z2), 2) && pow((xSphere - x), 2) + pow((ySphere - y), 2) + pow((zSphere - z2), 2) < pow(rayonSphere, 2) + (z + rayonSphere * 2))
             return true;
     }
-    //if (pow(rayonSphere, 2) - 50 < (pow((xSphere - x), 2) + pow((ySphere - y), 2)) && (pow((xSphere - x), 2) + pow((ySphere - y), 2)) < pow(rayonSphere, 2) + 50)
-    //    return true;
+    return false;
+}
+
+bool generator_image::point_belond_to_light(int xLight, int yLight, int zLight, int x, int y, int z, int rayonLight)
+{
+    for (int z2 = 0; z2 < z + rayonLight; z2++) {
+        if (pow(rayonLight, 2) - (z + rayonLight * 2) < pow((xLight - x), 2) + pow((yLight - y), 2) + pow((zLight - z2), 2) && pow((xLight - x), 2) + pow((yLight - y), 2) + pow((zLight - z2), 2) < pow(rayonLight, 2) + (z + rayonLight * 2))
+            return true;
+    }
+    return false;
+}
+
+bool generator_image::light_have_direct_ray_to_sphere(int xSphere, int ySphere, int zSphere, int x, int y, int z, int rayonSphere, int xLight, int yLight, int zLight)
+{
+    int dx = xSphere - xLight;
+    int dy = ySphere - yLight;
+    int dz = zSphere - zLight;
+    float distance = pow(dx, 2) + pow(dy, 2) + pow(dz, 2);
+    distance = sqrt(distance);
+
+    int dx2 = 0;
+    int dy2 = 0;
+    int dz2 = 0;
+    float distance2 = 0;
+
+    for (int z2 = 0; z2 < z + rayonSphere; z2++) {
+        dx2 = x - xLight;
+        dy2 = y - yLight;
+        dz2 = z - zLight;
+        distance2 = sqrt(pow(dx2 , 2) + pow(dy2 , 2) + pow(dz2 , 2));
+
+        if (distance2 < distance)
+            return true;
+    }
     return false;
 }
 
@@ -27,13 +59,14 @@ void generator_image::generate_ppm_image(libconfig::Config *cfg)
     const libconfig::Setting &racine = cfg->getRoot();
 
     const libconfig::Setting &sphere = racine["sphere"];
+    int rayonSphere = sphere.lookup("rayon");
     int xSphere = sphere.lookup("x");
     int ySphere = sphere.lookup("y");
     int zSphere = sphere.lookup("z");
-    int rayonSphere = sphere.lookup("rayon");
 
 
     const libconfig::Setting &light = racine["light"];
+    int rayonLight = light.lookup("rayon");
     int xLight = light.lookup("x");
     int yLight = light.lookup("y");
     int zLight = light.lookup("z");
@@ -49,8 +82,15 @@ void generator_image::generate_ppm_image(libconfig::Config *cfg)
 
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
-            if (point_belond_to_sphere(xSphere, ySphere, zSphere, x, y, rayonSphere))
-                image << "195 0 0 ";
+            if (point_belond_to_sphere(xSphere, ySphere, zSphere, x, y, std::max(zSphere, zLight), rayonSphere)) {
+                if (light_have_direct_ray_to_sphere(xSphere, ySphere, zSphere, x, y, std::max(zSphere, zLight), rayonSphere, xLight, yLight, zLight))
+                    image << "245 0 0 ";
+                else
+                    image << "195 0 0 ";
+            }
+            else if (point_belond_to_light(xLight, yLight, zLight, x, y, std::max(zSphere, zLight), rayonLight)) {
+                image << "255 255 51 ";
+            }
             else
                 image << "0 0 0 ";
         }
