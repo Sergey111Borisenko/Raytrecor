@@ -15,6 +15,8 @@
 
 class generator_image
 {
+    private:
+        int compteur;
     public:
         generator_image();
         void generate_ppm_image(libconfig::Config *cfg);

@@ -8,7 +8,7 @@
 
 generator_image::generator_image()
 {
-
+    compteur = 0;
 }
 
 bool generator_image::point_belond_to_sphere(int xSphere, int ySphere, int zSphere, int x, int y, int z, int rayonSphere)
@@ -48,8 +48,9 @@ bool generator_image::light_have_direct_ray_to_sphere(int xSphere, int ySphere, 
         dz2 = z - zLight;
         distance2 = sqrt(pow(dx2 , 2) + pow(dy2 , 2) + pow(dz2 , 2));
 
-        if (distance2 < distance)
+        if (distance2 < distance) {
             return true;
+        }
     }
     return false;
 }
@@ -80,13 +81,22 @@ void generator_image::generate_ppm_image(libconfig::Config *cfg)
     image << width << " " << height << std::endl;
     image << "255" << std::endl;
 
+    int red = 180;
+    std::string strRed = "180";
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             if (point_belond_to_sphere(xSphere, ySphere, zSphere, x, y, std::max(zSphere, zLight), rayonSphere)) {
-                if (light_have_direct_ray_to_sphere(xSphere, ySphere, zSphere, x, y, std::max(zSphere, zLight), rayonSphere, xLight, yLight, zLight))
-                    image << "245 0 0 ";
-                else
-                    image << "195 0 0 ";
+                if (light_have_direct_ray_to_sphere(xSphere, ySphere, zSphere, x, y, std::max(zSphere, zLight), rayonSphere, xLight, yLight, zLight)) {
+                    if (compteur == 100) {
+                        red += 1;
+                        strRed = std::to_string(red);
+                        image << strRed + " 0 0 ";  
+                        compteur = 0;
+                    } else
+                        image << strRed + " 0 0 ";
+                    compteur += 1;
+                } else
+                    image << "180 0 0 ";
             }
             else if (point_belond_to_light(xLight, yLight, zLight, x, y, std::max(zSphere, zLight), rayonLight)) {
                 image << "255 255 51 ";
