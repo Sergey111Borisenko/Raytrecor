@@ -1,0 +1,3 @@
+sphere = {x = 200; y = 100; z = 50; rayon = 50};
+
+light = {x = 500; y = 400; z = 0; rayon = 50};
